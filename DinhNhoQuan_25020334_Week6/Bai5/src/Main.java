@@ -22,4 +22,4 @@ public class Main {
         System.out.println("Copy: " + cf2);
         System.out.println("cf2 hash code: " + cf2.hashCode());
 	}
- }
+}
