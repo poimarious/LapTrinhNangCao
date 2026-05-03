@@ -1,0 +1,39 @@
+name: Cross-OS Java Testing and Quality Check
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-and-verify:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run Tests and Check Coverage
+        # Dùng verify để chạy cả unit test và jacoco check coverage
+        run: mvn -B verify
+
+      - name: Upload JaCoCo Report
+        # Đảm bảo báo cáo luôn được upload kể cả khi build fail do coverage < 80%
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report-${{ matrix.os }}
+          path: target/site/jacoco/
+          retention-days: 5

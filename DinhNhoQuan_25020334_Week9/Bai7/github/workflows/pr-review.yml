@@ -1,0 +1,40 @@
+name: Automated Code Review
+
+# 1. Trigger: Chỉ kích hoạt khi có Pull Request hướng vào nhánh main
+on:
+  pull_request:
+    branches: [ "main" ]
+
+# Cấp quyền cho GitHub Token để Bot có thể đăng bình luận vào PR
+permissions:
+  pull-requests: write
+  contents: read
+  checks: write
+
+jobs:
+  pr-checkstyle-review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Chạy mục tiêu 'checkstyle:checkstyle' để sinh ra file target/checkstyle-result.xml
+      # Không dùng 'checkstyle:check' ở đây vì ta muốn nó tạo file XML mà không làm dừng pipeline ngay lập tức
+      - name: Generate Checkstyle Report
+        run: mvn checkstyle:checkstyle
+
+      # 2. Inline Feedback: Đọc file XML và đăng bình luận lên các dòng code lỗi
+      - name: Run Checkstyle Review Bot
+        uses: dbelyaev/action-checkstyle@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          checkstyle_file: target/checkstyle-result.xml
+          filter_mode: added # Chỉ comment vào những dòng code mới được thêm/sửa trong PR này

@@ -1,0 +1,31 @@
+name: Cross-OS Java Testing
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    # Sử dụng matrix.os để tự động thay đổi hệ điều hành
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Nếu một OS fail, các OS khác vẫn tiếp tục chạy
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run Maven Tests
+        run: mvn -B test
